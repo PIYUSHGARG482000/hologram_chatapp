@@ -42,7 +42,7 @@
 
         <div class="message">
             <input type="text" name="message" id="user" class="user" placeholder="Enter Your Messsage." />
-            <i class="fa-sharp fa-solid fa-paperclip"></i>
+            <input type="file" name="media" class="fa-sharp fa-solid fa-paperclip" onchange="uploads(this.files)">
             <button onclick="sendMessage()">
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
@@ -113,6 +113,18 @@
             chatcontainer.appendChild(joiner);
             chatcontainer.scrollTop = chatcontainer.scrollHeight;
         })
+
+
+        function uploads(file){
+            if(file.length == 0) {
+                alert('Kindly select file to upload...')
+            }
+            console.log(file[0]);
+            socket.emit('upload_media', file[0], (status)=> {
+                console.log(status);
+            })
+        }
+
 
         function sendMessage(e) {
             const message = document.getElementById("user");
