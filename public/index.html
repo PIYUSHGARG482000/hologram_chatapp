@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://kit.fontawesome.com/ef09c285ed.js" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="banner">
+            <i class="fa-brands fa-rocketchat"></i><br />
+            <h4>Hologram</h4>
+        </div>
+
+        <div class="info">
+            <i class="fa-solid fa-user-tie"></i><br />
+            <h4 id="chatuser"></h4>
+        </div>
+
+        <div class="chat" id="chatcontainer">
+            <!-- <div class="left-message">
+                <span>Anonymous User<i>01-08-2024 02:45 PM</i></span>
+                <p>Hii Good Morning</p>
+            </div> -->
+
+            <!-- <div class="right-message">
+                <span>Anonymous User<i>01-08-2024 02:45 PM</i></span>
+                <p>Hii Good Morning</p>
+            </div> -->
+            
+            <!-- <div class="joiner">
+                <h4></h4>
+            </div> -->
+
+        </div>
+
+        <div class="message">
+            <input type="text" name="message" id="user" class="user" placeholder="Enter Your Messsage." />
+            <i class="fa-sharp fa-solid fa-paperclip"></i>
+            <button onclick="sendMessage()">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        //To Prevent the server from repeated message publish repeatedly on server.
+        const socket = io({
+                auth: {
+                serverOffset: 0
+                },
+                // enable retries
+                ackTimeout: 10000,
+                retries: 3,
+            });
+        document.body.style.zoom = "90%";
+        const username = prompt("Please Enter Username");
+        let userfield = document.getElementById("chatuser");
+        userfield.innerText = username.toString().toUpperCase();
+        socket.emit('user', username.toString().toUpperCase());
+        socket.on('user', (user) => {
+            console.log(user);
+            let joiner = document.createElement('div');
+            joiner.className = 'joiner';
+            let chatcontainer = document.getElementById('chatcontainer');
+            let join = document.createElement('h4');
+            join.innerText = `${user} joined the Chat.`;
+            joiner.appendChild(join);
+            chatcontainer.appendChild(joiner);
+            
+        })
+
+       
+        socket.on('chat', (obj, serverOffset) => {
+            console.log(obj);
+            let chatmessage = document.createElement("div");
+            let usermessage = document.createElement("p");
+            let chatcontainer = document.getElementById("chatcontainer");
+            chatmessage.className = 'left-message';
+            let user = document.createElement("span");
+            user.innerText =  obj.user;
+            usermessage.innerText = obj.msg;
+            let date = document.createElement("i");
+            date.innerText = `${formatDate(new Date())}`;
+            user.appendChild(date);
+            chatmessage.appendChild(user);
+            chatmessage.appendChild(usermessage);
+            chatcontainer.appendChild(chatmessage);
+            socket.auth.serverOffset = serverOffset;
+             //logic for bottom scroll
+            chatcontainer.scrollTop = chatcontainer.scrollHeight;
+        })
+
+       
+        
+        socket.on('disconnect', (user) => {
+            console.log(user);
+            let joiner = document.createElement('div');
+            joiner.className = 'joiner';
+            let chatcontainer = document.getElementById('chatcontainer');
+            let join = document.createElement('h4');
+            join.innerText = `${user} left the Chat.`;
+            joiner.appendChild(join);
+            chatcontainer.appendChild(joiner);
+        })
+
+        function sendMessage(e) {
+            const message = document.getElementById("user");
+            if (message.value.length === 0) {
+                alert("Please enter some message.");
+            } else {
+                socket.emit('chat', {user : username.toString().toUpperCase(), msg : message.value});  
+                let chatmessage = document.createElement("div");
+                let usermessage = document.createElement("p");
+                let chatcontainer = document.getElementById("chatcontainer");  
+                chatmessage.className = 'right-message';
+                let user = document.createElement("span");
+                user.innerText =  username.toString().toUpperCase();
+                usermessage.innerText = message.value;
+                let date = document.createElement("i");
+                date.innerText = `${formatDate(new Date())}`;
+                user.appendChild(date);
+                chatmessage.appendChild(user);
+                chatmessage.appendChild(usermessage);
+                chatcontainer.appendChild(chatmessage);   
+                 //logic for bottom scroll
+                 message.value = ''
+                chatcontainer.scrollTop = chatcontainer.scrollHeight;       
+            }
+        }
+
+        function formatDate(date) {
+            let day = date.getDate();
+            let month = date.getMonth() + 1;
+            let year = date.getFullYear();
+            let hours = date.getHours();
+            let minutes = date.getMinutes();
+            let seconds = date.getSeconds();
+
+            day = day < 10 ? "0" + day : day;
+            month = month < 10 ? "0" + month : month;
+            hours = hours < 10 ? "0" + hours : hours;
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+
+            return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+        }
+
+        function updateInputContainer() {
+            const inputField = document.getElementById('user');
+            const inputContainer = document.getElementById('message');
+            if(inputField.value.length > 15){
+                // inputContainer.textContent = inputField.value;
+                inputField.style.height = inputContainer.scrollHeight + 1;
+                inputContainer.appendChild(inputField);
+            }
+        }
+    </script>
+</body>
+
+</html>
