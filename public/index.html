@@ -63,22 +63,11 @@
         const username = prompt("Please Enter Username");
         let userfield = document.getElementById("chatuser");
         userfield.innerText = username.toString().toUpperCase();
-        socket.emit('user', username.toString().toUpperCase());
-        socket.on('user', (user) => {
-            console.log(user);
-            let joiner = document.createElement('div');
-            joiner.className = 'joiner';
-            let chatcontainer = document.getElementById('chatcontainer');
-            let join = document.createElement('h4');
-            join.innerText = `${user} joined the Chat.`;
-            joiner.appendChild(join);
-            chatcontainer.appendChild(joiner);
-            
-        })
+        socket.emit('connected_user', username.toString().toUpperCase());
 
-       
+               
         socket.on('chat', (obj, serverOffset) => {
-            console.log(obj);
+            // console.log(obj);
             let chatmessage = document.createElement("div");
             let usermessage = document.createElement("p");
             let chatcontainer = document.getElementById("chatcontainer");
@@ -97,10 +86,24 @@
             chatcontainer.scrollTop = chatcontainer.scrollHeight;
         })
 
-       
         
-        socket.on('disconnect', (user) => {
-            console.log(user);
+        socket.on('connected_user', (User) => {
+            console.log(User);
+            let joiner = document.createElement('div');
+            joiner.className = 'joiner';
+            let chatcontainer = document.getElementById('chatcontainer');
+            let join = document.createElement('h4');
+            join.innerText = `${User} joined the Chat.`;
+            joiner.appendChild(join);
+            chatcontainer.appendChild(joiner);
+            chatcontainer.scrollTop = chatcontainer.scrollHeight;
+        })
+        window.addEventListener('beforeunload', function (e) {
+            e.preventDefault();
+            socket.emit('disconnect_user', username.toString().toUpperCase())
+        });
+        
+        socket.on('disconnect_user', (user) => {
             let joiner = document.createElement('div');
             joiner.className = 'joiner';
             let chatcontainer = document.getElementById('chatcontainer');
@@ -108,6 +111,7 @@
             join.innerText = `${user} left the Chat.`;
             joiner.appendChild(join);
             chatcontainer.appendChild(joiner);
+            chatcontainer.scrollTop = chatcontainer.scrollHeight;
         })
 
         function sendMessage(e) {

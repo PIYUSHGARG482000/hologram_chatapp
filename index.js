@@ -14,9 +14,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 //Connection
 io.on('connection', (socket) => {
-    
+
     socket.on('user', (user) => {
         console.log(`${user} is Connected with Id:`, socket.id);
+    })
+
+    socket.on('connected_user', (user) => { 
+        socket.broadcast.emit('connected_user', user);
     })
 
     //To Broadcast message from client
@@ -25,11 +29,15 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('chat', obj);
     })
 
-    // socket.on('disconnect', () => {
-    //     console.log(`${socket.id} is disconnected!!`);
-    // })
-});
+    socket.on('disconnect', () => {
+        socket.on('disconnect_user', (User) => {
+            socket.emit('disconnect_user', User);
+            console.log(`${socket.id} is disconnected!!`);
+        })
+    })
 
+    
+});
 
 
 server.listen(PORT, (err)=>{
